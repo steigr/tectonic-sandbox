@@ -3,12 +3,15 @@
 # generate manifests with the official tectonic-installer
 #
 
+[[ -z "$TRACE" ]] || set -x
+
 set -e
 
 TECTONIC_VERSION="1.8.9-tectonic.1"
 TECTONIC_INSTALLER_ZIP="${1:-https://releases.tectonic.com/releases/tectonic_$TECTONIC_VERSION.zip}"
 TECTONIC_ADMIN_EMAIL="admin@example.com"
 TECTONIC_ADMIN_PASSWORD="sandbox"
+TECTONIC_MANIFEST_ARCHIVE="tectonic-$TECTONIC_VERSION-manifests.tar.gz"
 
 WORKDIR="$(mktemp -d -u)"
 
@@ -106,16 +109,18 @@ _generate_manifests() {
 
 _save_manifests() {
   _ensure_temp "$1"
-  tar -z -c -C "$1/generated" . > "tectonic-$TECTONIC_VERSION-manifests.tar.gz"
+  tar -z -c -C "$1/generated" . > "$TECTONIC_MANIFEST_ARCHIVE"
 }
 
 
 [[ -f license.txt ]] || panic "Provide own license.txt or download tectonic-sandbox"
 [[ -f pull.json ]] || panic "Provide own pull.json or download tectonic-sandbox"
 
-_prepare_installer "$WORKDIR"
-_provide_license "$WORKDIR"
-_set_tfvars "$WORKDIR"
-_disable_matchbox "$WORKDIR"
-_generate_manifests "$WORKDIR"
-_save_manifests "$WORKDIR"
+[[ -f "$TECTONIC_MANIFEST_ARCHIVE" ]] || (
+  _prepare_installer "$WORKDIR"
+  _provide_license "$WORKDIR"
+  _set_tfvars "$WORKDIR"
+  _disable_matchbox "$WORKDIR"
+  _generate_manifests "$WORKDIR"
+  _save_manifests "$WORKDIR"
+)
