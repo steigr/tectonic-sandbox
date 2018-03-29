@@ -96,10 +96,10 @@ _generate_manifests() {
     ( cd "$1"
       touch license.txt
       touch pull.json
-      terraform init platforms/metal
-      terraform get platforms/metal
-      terraform plan platforms/metal
-      terraform apply platforms/metal 2>&1 >/dev/null \
+      tectonic-installer/darwin/terraform init platforms/metal
+      tectonic-installer/darwin/terraform get platforms/metal
+      tectonic-installer/darwin/terraform plan platforms/metal
+      tectonic-installer/darwin/terraform apply -auto-approve=true platforms/metal 3>&2 2>&1 1>&3 \
       | grep -q 'dial tcp'
     )
 }
