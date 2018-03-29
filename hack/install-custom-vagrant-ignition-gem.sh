@@ -4,10 +4,13 @@
 # but there are PRs pending adding support for VMware
 #
 
+[[ -z "$TRACE" ]] || set -x
+
 set -e
 
 VAGRANT_IGNITON_REPO="https://github.com/steigr/vagrant-ignition"
 VAGRANT_IGNITON_BRANCH="feature/detect-active-provider"
+VAGRANT_IGNITON_GEM="vagrant-ignition.gem"
 
 VAGRANT_HOME=/opt/vagrant
 WORKDIR="$(mktemp -d -u)"
@@ -39,9 +42,13 @@ _build_gem() {
 
 _install_plugin() {
     _ensure_temp "$1"
-    ( cd "$1"; vagrant plugin install "$(ls pkg/vagrant-ignition-*.gem | tail -1 )" )
+    cp "$1/pkg"/vagrant-ignition-*.gem "$VAGRANT_IGNITON_GEM"
+    vagrant plugin install "$VAGRANT_IGNITON_GEM"
+    # ( cd "$1"; vagrant plugin install "$(ls pkg/vagrant-ignition-*.gem | tail -1 )" )
 }
 
-_checkout "$WORKDIR"
-_build_gem "$WORKDIR"
-_install_plugin "$WORKDIR"
+[[ -f "$VAGRANT_IGNITON_GEM" ]] || (
+  _checkout "$WORKDIR"
+  _build_gem "$WORKDIR"
+  _install_plugin "$WORKDIR"
+)
