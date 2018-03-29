@@ -1,5 +1,8 @@
 /license.txt
 /provisioning/tectonic
+/provisioning/node.ign*
+/provisioning/etc
+/.vagrant
 /tectonic-*-manifests.tar.gz
 /*.box
 /*.json
