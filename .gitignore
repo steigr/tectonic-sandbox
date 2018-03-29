@@ -1,0 +1,5 @@
+/license.txt
+/provisioning/tectonic
+/tectonic-*-manifests.tar.gz
+/*.box
+/*.json
