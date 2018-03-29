@@ -3,6 +3,8 @@
 # generate manifests with the official tectonic-installer
 #
 
+[[ -z "$TRACE" ]] || set -x
+
 set -e
 
 TECTONIC_MANIFEST_ARCHIVE="${1:-$(ls tectonic-*-manifests.tar.gz)}"

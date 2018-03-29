@@ -3,6 +3,8 @@
 # generate manifests with the official tectonic-installer
 #
 
+[[ -z "$TRACE" ]] || set -x
+
 set -e
 
 TECTONIC_SANDBOX_ZIP="$1"

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+[[ -z "$TRACE" ]] || set -x
+
 set -e
 
 BOX_NAME="coreos-alpha"

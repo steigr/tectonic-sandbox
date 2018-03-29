@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+[[ -z "$TRACE" ]] || set -x
+
 panic() {
     echo "${@}"
     exit 1
