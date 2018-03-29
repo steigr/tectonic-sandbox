@@ -8,6 +8,9 @@
 set -e
 
 TECTONIC_MANIFEST_ARCHIVE="${1:-$(ls tectonic-*-manifests.tar.gz)}"
+TECTONIC_ADMIN_EMAIL="${TECTONIC_ADMIN_EMAIL:-$(whoami)@$(hostname -f)}"
+TECTONIC_ADMIN_NAME="$(id -F)"
+
 WORKDIR="$(mktemp -d -u)"
 
 panic() {
@@ -41,6 +44,14 @@ _patch_tectonic_ingress() {
           sed -e 's|secure-port=443|secure-port=445|g' "$manifest" > "$manifest".tmp \
           && mv "$manifest".tmp "$manifest"
       done
+
+      FLANNEL_DEPLOYMENT="$(find $(find . -name net-manifests -type d) -name kube-flannel.yaml -type f | head -1)"
+      sed -e "s|vxlan|host-gw|" "$FLANNEL_DEPLOYMENT" > "$FLANNEL_DEPLOYMENT".tmp \
+      && mv "$FLANNEL_DEPLOYMENT".tmp "$FLANNEL_DEPLOYMENT"
+
+      IDENTITY_CONFIGMAP_MANIFEST="$(find $(find . -name identity -type d) -name configmap.yaml -type f | head -1)"
+      sed -e "s|username: .*|username: \"$TECTONIC_ADMIN_NAME\"|" "$IDENTITY_CONFIGMAP_MANIFEST" > "$IDENTITY_CONFIGMAP_MANIFEST".tmp \
+      && mv "$IDENTITY_CONFIGMAP_MANIFEST".tmp "$IDENTITY_CONFIGMAP_MANIFEST"
 
       INGRESS_HOSTPORT_MANIFEST="$(find $(find $(find . -name ingress -type d) -name hostport -type d) -name daemonset.yaml -type f | head -1)"
       sed -e 's|DoesNotExist|Exists|' "$INGRESS_HOSTPORT_MANIFEST" > "$INGRESS_HOSTPORT_MANIFEST".tmp \
@@ -86,6 +97,13 @@ _install_to_provisioning_dir() {
     tar -c -C "$1" $(ls -A "$1") | tar -x -C "$2"
 }
 
+_update_startup_script() {
+  sed -e "s|\(Username[[:space:]*]\"\).*\(\"\)|\1$TECTONIC_ADMIN_EMAIL\2|" provisioning/tectonic-startup.sh > provisioning/tectonic-startup.sh.tmp \
+  && cat provisioning/tectonic-startup.sh.tmp > provisioning/tectonic-startup.sh \
+  && rm provisioning/tectonic-startup.sh.tmp
+}
+
 _prepare_workdir "$WORKDIR"
 _patch_tectonic_ingress "$WORKDIR"
 _install_to_provisioning_dir "$WORKDIR" "$PWD/provisioning/tectonic"
+_update_startup_script

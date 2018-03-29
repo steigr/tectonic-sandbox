@@ -9,8 +9,8 @@ set -e
 
 TECTONIC_VERSION="1.8.9-tectonic.1"
 TECTONIC_INSTALLER_ZIP="${1:-https://releases.tectonic.com/releases/tectonic_$TECTONIC_VERSION.zip}"
-TECTONIC_ADMIN_EMAIL="admin@example.com"
-TECTONIC_ADMIN_PASSWORD="sandbox"
+TECTONIC_ADMIN_EMAIL="${TECTONIC_ADMIN_EMAIL:-$(whoami)@$(hostname -f)}"
+TECTONIC_ADMIN_PASSWORD="${TECTONIC_ADMIN_PASSWORD:-sandbox}"
 TECTONIC_MANIFEST_ARCHIVE="tectonic-$TECTONIC_VERSION-manifests.tar.gz"
 
 WORKDIR="$(mktemp -d -u)"
@@ -111,7 +111,6 @@ _save_manifests() {
   _ensure_temp "$1"
   tar -z -c -C "$1/generated" . > "$TECTONIC_MANIFEST_ARCHIVE"
 }
-
 
 [[ -f license.txt ]] || panic "Provide own license.txt or download tectonic-sandbox"
 [[ -f pull.json ]] || panic "Provide own pull.json or download tectonic-sandbox"

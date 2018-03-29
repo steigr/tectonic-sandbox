@@ -26,6 +26,7 @@ _ensure_temp() {
 
 _extract_license() {
     _ensure_temp "$1"
+    [[ "$TECTONIC_SANDBOX_ZIP" ]] || panic "Give URL or path to tectonc-sandbox zip-file as first argument. Check out https://coreos.com/tectonic/sandbox/ for more information."
     [[ -f "$TECTONIC_SANDBOX_ZIP" ]] \
     && cp "$TECTONIC_SANDBOX_ZIP" "$1/sandbox.zip" \
     || curl -L -o "$1/sandbox.zip" "$TECTONIC_SANDBOX_ZIP"
