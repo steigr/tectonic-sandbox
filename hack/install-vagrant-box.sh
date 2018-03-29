@@ -54,7 +54,6 @@ _get_version_param() {
 }
 
 _create_box_json() {
-    [[ -d "$1" ]] || _ensure_temp "$1"
     _get_version_param COREOS_VERSION
     sed -e 's|^    ||' >"$BOX_NAME.json" <<EOJSOM 
     {
@@ -74,12 +73,16 @@ EOJSOM
 }
 
 _add_box() {
-    vagrant box add --force --name="$BOX_NAME" "$BOX_NAME.json"
+    vagrant box outdated \
+    || bvagrant box add --force --name="$BOX_NAME" "$BOX_NAME.json"
 }
 
-_download_box "$BUILD_PATH"
-_download_vmdk "$BUILD_PATH"
-_resize_disk "$BUILD_PATH"
-_compress_box "$BUILD_PATH"
-_create_box_json "$BUILD_PATH"
+[[ -f "$BOX_NAME.box" ]] || (
+  _download_box "$BUILD_PATH"
+  _download_vmdk "$BUILD_PATH"
+  _resize_disk "$BUILD_PATH"
+  _compress_box "$BUILD_PATH"
+)
+
+[[ -f "$BOX_NAME.json" ]] || _create_box_json "$BUILD_PATH"
 _add_box "$BUILD_PATH"
