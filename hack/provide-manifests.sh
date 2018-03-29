@@ -97,13 +97,6 @@ _install_to_provisioning_dir() {
     tar -c -C "$1" $(ls -A "$1") | tar -x -C "$2"
 }
 
-_update_startup_script() {
-  sed -e "s|\(Username[[:space:]*]\"\).*\(\"\)|\1$TECTONIC_ADMIN_EMAIL\2|" provisioning/tectonic-startup.sh > provisioning/tectonic-startup.sh.tmp \
-  && cat provisioning/tectonic-startup.sh.tmp > provisioning/tectonic-startup.sh \
-  && rm provisioning/tectonic-startup.sh.tmp
-}
-
 _prepare_workdir "$WORKDIR"
 _patch_tectonic_ingress "$WORKDIR"
 _install_to_provisioning_dir "$WORKDIR" "$PWD/provisioning/tectonic"
-_update_startup_script

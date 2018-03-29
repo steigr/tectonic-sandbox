@@ -74,15 +74,17 @@ EOJSOM
 
 _add_box() {
     vagrant box outdated \
-    || bvagrant box add --force --name="$BOX_NAME" "$BOX_NAME.json"
+    || vagrant box add --force --name="$BOX_NAME" "$BOX_NAME.json"
 }
 
-[[ -f "$BOX_NAME.box" ]] || (
-  _download_box "$BUILD_PATH"
-  _download_vmdk "$BUILD_PATH"
-  _resize_disk "$BUILD_PATH"
-  _compress_box "$BUILD_PATH"
-)
+vagrant box list | grep -q "^$BOX_NAME" || (
+  [[ -f "$BOX_NAME.box" ]] || (
+    _download_box "$BUILD_PATH"
+    _download_vmdk "$BUILD_PATH"
+    _resize_disk "$BUILD_PATH"
+    _compress_box "$BUILD_PATH"
+  )
 
-[[ -f "$BOX_NAME.json" ]] || _create_box_json "$BUILD_PATH"
-_add_box "$BUILD_PATH"
+  [[ -f "$BOX_NAME.json" ]] || _create_box_json "$BUILD_PATH"
+  _add_box "$BUILD_PATH"
+  )

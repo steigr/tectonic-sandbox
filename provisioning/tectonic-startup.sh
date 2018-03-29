@@ -37,10 +37,12 @@ done
 kubectl get pods --all-namespaces > /tmp/cat.txt
 cat /tmp/cat.txt
 
+tectonic_username="$(kubectl -n tectonic-system get configmap/tectonic-identity -o json | jq -r '.data."config.yaml"' | grep username | awk '{print $2}')"
+
 cat << EOF
 Tectonic has started successfully! You can log into your cluster now:
   Console address: https://tectonic.sandbox/
-  Username "admin@example.com"
+  Username "$tectonic_username"
   Password "sandbox"
 
 Unable to reach the Console? Starting the VM after a reboot? Don't panic!
