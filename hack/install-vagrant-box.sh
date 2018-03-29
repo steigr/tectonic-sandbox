@@ -44,7 +44,7 @@ _resize_disk() {
 _compress_box() {
     [[ -d "$1" ]] || _ensure_temp "$1"
     [[ -f "$1/Vagrantfile" ]] || panic "Vagrantfile in $1 not found"
-    tar -z -c -C "$1" $(ls -A $1) > "$1/$BOX_NAME.box"
+    tar -z -c -C "$1" $(ls -A $1) > "$BOX_NAME.box"
 }
 
 _get_version_param() {
@@ -54,7 +54,7 @@ _get_version_param() {
 _create_box_json() {
     [[ -d "$1" ]] || _ensure_temp "$1"
     _get_version_param COREOS_VERSION
-    sed -e 's|^    ||' >"$1/$BOX_NAME.json" <<EOJSOM 
+    sed -e 's|^    ||' >"$BOX_NAME.json" <<EOJSOM 
     {
       "name": "$BOX_NAME",
       "description": "CoreOS $BOX_CHANNEL",
@@ -62,19 +62,17 @@ _create_box_json() {
         "version": "$COREOS_VERSION",
         "providers": [{
           "name": "vmware_fusion",
-          "url": "$1/$BOX_NAME.box",
+          "url": "$BOX_NAME.box",
           "checksum_type": "sha256",
-          "checksum": "$(shasum -p -a 256 "$1/$BOX_NAME.box" | awk '{print $1}')"
+          "checksum": "$(shasum -p -a 256 "$BOX_NAME.box" | awk '{print $1}')"
         }]
       }]
     }
 EOJSOM
-    cat "$1/$BOX_NAME.json"
 }
 
 _add_box() {
-    [[ -d "$1" ]] || _ensure_temp "$1"
-    vagrant box add --force --name="$BOX_NAME" "$1/$BOX_NAME.json"
+    vagrant box add --force --name="$BOX_NAME" "$BOX_NAME.json"
 }
 
 _download_box "$BUILD_PATH"
