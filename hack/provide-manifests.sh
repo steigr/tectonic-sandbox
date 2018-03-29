@@ -33,6 +33,17 @@ _prepare_workdir() {
 _patch_tectonic_ingress() {
     _ensure_temp "$1"
     ( cd "$1"
+      
+      # move k8s api to port 445
+      for manifest in $(find $(find $(find . -name '*manifest' -type d) -name '*apiserver.yaml' -type f); do 
+          sed -e 's|secure-port=443|secure-port=445|g' "$manifest" > "$manifest".tmp \
+          && mv "$manifest".tmp "$manifest"
+      done
+
+      INGRESS_HOSTPORT_MANIFEST="$(find $(find $(find . -name ingress -type d) -name hostport -type d) -name daemonset.yaml -type f | head -1)"
+      sed -e 's|DoesNotExist|Exists|' "$INGRESS_HOSTPORT_MANIFEST" > "$INGRESS_HOSTPORT_MANIFEST".tmp \
+      && mv "$INGRESS_HOSTPORT_MANIFEST".tmp "$INGRESS_HOSTPORT_MANIFEST"
+
       INGRESS_HOSTPORT_MANIFEST="$(find $(find $(find . -name ingress -type d) -name hostport -type d) -name daemonset.yaml -type f | head -1)"
       sed -e 's|DoesNotExist|Exists|' "$INGRESS_HOSTPORT_MANIFEST" > "$INGRESS_HOSTPORT_MANIFEST".tmp \
       && mv "$INGRESS_HOSTPORT_MANIFEST".tmp "$INGRESS_HOSTPORT_MANIFEST"
