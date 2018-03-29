@@ -149,7 +149,7 @@ storage:
       contents:
         inline: |
           KUBELET_IMAGE_URL="quay.io/coreos/hyperkube"
-          KUBELET_IMAGE_TAG="v1.8.9_core.1"
+          KUBELET_IMAGE_TAG="v1.8.9_coreos.1"
     - path: /etc/sysctl.d/max-user-watches.conf
       filesystem: root
       mode: 0644
