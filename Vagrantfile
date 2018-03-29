@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
   config.vm.network "private_network", ip: node_ip
 
   config.vm.provider node_provider do |vmx|
-    vmx.gui = true
+    vmx.gui = false
     vmx.memory = node_memory
     vmx.vmx.merge!({
       "ethernet0.virtualdev" => "vmxnet3",
