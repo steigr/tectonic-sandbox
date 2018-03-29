@@ -5,30 +5,17 @@
 
 [[ -z "$TRACE" ]] || set -x
 
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+
 set -e
 
-TECTONIC_MANIFEST_ARCHIVE="${1:-$(ls tectonic-*-manifests.tar.gz)}"
+TECTONIC_MANIFEST_ARCHIVE="${1:-$(ls build/tectonic-*-manifests.tar.gz)}"
 TECTONIC_ADMIN_EMAIL="${TECTONIC_ADMIN_EMAIL:-$(whoami)@$(hostname -f)}"
 TECTONIC_ADMIN_NAME="$(id -F)"
 
 WORKDIR="$(mktemp -d -u)"
 
-panic() {
-    echo "${@}"
-    exit 1
-}
-
-_ensure_temp() {
-    if [[ -d "$1" ]]; then
-        return
-    else
-        mkdir -p "$1"
-        trap "rm -r $1" EXIT
-    fi
-}
-
 _prepare_workdir() {
-    _ensure_temp "$1"
     tar -x -f "$TECTONIC_MANIFEST_ARCHIVE" -C "$1"
 }
 
@@ -36,7 +23,6 @@ _prepare_workdir() {
 # ssl-passthrough is enabled
 # and an ingress rule is added for kubernetes
 _patch_tectonic_ingress() {
-    _ensure_temp "$1"
     ( cd "$1"
       
       # move k8s api to port 445
@@ -52,10 +38,6 @@ _patch_tectonic_ingress() {
       IDENTITY_CONFIGMAP_MANIFEST="$(find $(find . -name identity -type d) -name configmap.yaml -type f | head -1)"
       sed -e "s|username: .*|username: \"$TECTONIC_ADMIN_NAME\"|" "$IDENTITY_CONFIGMAP_MANIFEST" > "$IDENTITY_CONFIGMAP_MANIFEST".tmp \
       && mv "$IDENTITY_CONFIGMAP_MANIFEST".tmp "$IDENTITY_CONFIGMAP_MANIFEST"
-
-      INGRESS_HOSTPORT_MANIFEST="$(find $(find $(find . -name ingress -type d) -name hostport -type d) -name daemonset.yaml -type f | head -1)"
-      sed -e 's|DoesNotExist|Exists|' "$INGRESS_HOSTPORT_MANIFEST" > "$INGRESS_HOSTPORT_MANIFEST".tmp \
-      && mv "$INGRESS_HOSTPORT_MANIFEST".tmp "$INGRESS_HOSTPORT_MANIFEST"
 
       INGRESS_HOSTPORT_MANIFEST="$(find $(find $(find . -name ingress -type d) -name hostport -type d) -name daemonset.yaml -type f | head -1)"
       sed -e 's|DoesNotExist|Exists|' "$INGRESS_HOSTPORT_MANIFEST" > "$INGRESS_HOSTPORT_MANIFEST".tmp \
@@ -90,13 +72,26 @@ EOING
       )
 }
 
+_update_templates() {
+  (
+    cd "provisioning/templates"
+    IDENTITY_CONFIGMAP_MANIFEST="configmap.tmpl"
+    sed -e "s|email: .*|email: \"$TECTONIC_ADMIN_EMAIL\"|" \
+        -e "s|username: .*|username: \"$TECTONIC_ADMIN_NAME\"|" \
+      "$IDENTITY_CONFIGMAP_MANIFEST" > "$IDENTITY_CONFIGMAP_MANIFEST".tmp \
+    && mv "$IDENTITY_CONFIGMAP_MANIFEST".tmp "$IDENTITY_CONFIGMAP_MANIFEST"
+  )
+}
+
 _install_to_provisioning_dir() {
-    _ensure_temp "$1"
     [[ ! -d "$2" ]] || rm -r "$2"
     mkdir -p "$2"
     tar -c -C "$1" $(ls -A "$1") | tar -x -C "$2"
 }
+_ensure_build
+_ensure_temp "$WORKDIR"
 
 _prepare_workdir "$WORKDIR"
 _patch_tectonic_ingress "$WORKDIR"
 _install_to_provisioning_dir "$WORKDIR" "$PWD/provisioning/tectonic"
+_update_templates

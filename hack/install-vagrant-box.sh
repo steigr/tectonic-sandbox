@@ -2,6 +2,8 @@
 
 [[ -z "$TRACE" ]] || set -x
 
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+
 set -e
 
 BOX_NAME="coreos-alpha"
@@ -18,35 +20,30 @@ VDISKMANAGER="/Applications/VMware Fusion.app/Contents/Library/vmware-vdiskmanag
 
 BUILD_PATH="$(mktemp -d -u)"
 
-panic() {
-    echo "${@}"
-    exit 1
-}
-
 _ensure_temp() {
     mkdir -p "$1"
     trap "rm -r $1" EXIT
 }
 
 _download_box() {
-    [[ -d "$1" ]] || _ensure_temp "$1"
+    _ensure_temp "$1"
     curl -L "$BOX_URL" | tar xvzC "$1"
 }
 
 _download_vmdk() {
-    [[ -d "$1" ]] || _ensure_temp "$1"
+    _ensure_temp "$1"
     curl -L "$VMDK_URL" | bzcat > "$1/$(ls -A $1 | grep '.vmdk$')"
 }
 
 _resize_disk() {
-    [[ -d "$1" ]] || _ensure_temp "$1"
+    _ensure_temp "$1"
     "$VDISKMANAGER" -x "$DISK_SIZE" "$1/$(ls -A $1 | grep '.vmdk$')"
 }
 
 _compress_box() {
-    [[ -d "$1" ]] || _ensure_temp "$1"
+    _ensure_temp "$1"
     [[ -f "$1/Vagrantfile" ]] || panic "Vagrantfile in $1 not found"
-    tar -z -c -C "$1" $(ls -A $1) > "$BOX_NAME.box"
+    tar -z -c -C "$1" $(ls -A $1) > "build/$BOX_NAME.box"
 }
 
 _get_version_param() {
@@ -55,7 +52,7 @@ _get_version_param() {
 
 _create_box_json() {
     _get_version_param COREOS_VERSION
-    sed -e 's|^    ||' >"$BOX_NAME.json" <<EOJSOM 
+    sed -e 's|^    ||' >"build/$BOX_NAME.json" <<EOJSOM 
     {
       "name": "$BOX_NAME",
       "description": "CoreOS $BOX_CHANNEL",
@@ -63,9 +60,9 @@ _create_box_json() {
         "version": "$COREOS_VERSION",
         "providers": [{
           "name": "vmware_fusion",
-          "url": "$BOX_NAME.box",
+          "url": "build/$BOX_NAME.box",
           "checksum_type": "sha256",
-          "checksum": "$(shasum -p -a 256 "$BOX_NAME.box" | awk '{print $1}')"
+          "checksum": "$(shasum -p -a 256 "build/$BOX_NAME.box" | awk '{print $1}')"
         }]
       }]
     }
@@ -73,18 +70,22 @@ EOJSOM
 }
 
 _add_box() {
+    vagrant box list | grep -q "^$BOX_NAME" \
+    || vagrant box add "build/$BOX_NAME.json"
     vagrant box outdated \
-    || vagrant box add --force --name="$BOX_NAME" "$BOX_NAME.json"
+    || vagrant box add "build/$BOX_NAME.json"
 }
 
+_ensure_build
+
 vagrant box list | grep -q "^$BOX_NAME" || (
-  [[ -f "$BOX_NAME.box" ]] || (
+  [[ -f "build/$BOX_NAME.box" ]] || (
     _download_box "$BUILD_PATH"
     _download_vmdk "$BUILD_PATH"
     _resize_disk "$BUILD_PATH"
     _compress_box "$BUILD_PATH"
   )
 
-  [[ -f "$BOX_NAME.json" ]] || _create_box_json "$BUILD_PATH"
+  [[ -f "build/$BOX_NAME.json" ]] || _create_box_json "$BUILD_PATH"
   _add_box "$BUILD_PATH"
   )

@@ -335,7 +335,7 @@ def provision config, node_config, node_provider
     ingress_file_etc.syswrite(data)
     ingress_file_etc.close
 
-    ingress_certificate_pem = File.new("tectonic.sandbox.pem","wb")
+    ingress_certificate_pem = File.new("build/tectonic.sandbox.pem","wb")
     ingress_certificate_pem.syswrite(ingress_cert.to_pem)
     ingress_certificate_pem.close
 

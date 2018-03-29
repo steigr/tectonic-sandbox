@@ -1,10 +1,5 @@
-/license.txt
 /provisioning/tectonic
 /provisioning/node.ign*
 /provisioning/etc
 /.vagrant
-/tectonic-*-manifests.tar.gz
-/*.box
-/*.json
-/vagrant-ignition.gem
-/tectonic.sandbox.pem
+/build

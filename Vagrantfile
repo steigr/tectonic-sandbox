@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
   ARGV[0] == 'up' && provision(config,node_config,node_provider)
 
   config.vm.box = "coreos-alpha"
-  config.vm.box_url = "coreos-alpha.json"
+  config.vm.box_url = "build/coreos-alpha.json"
   
   config.vm.define vm_name = node_name
   config.vm.hostname = node_name

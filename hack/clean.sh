@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
-rm *.box *.json *.gem *.tar.gz *.txt
-rm -r provisioning/tectonic .vagrant
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+
+rm -r build/*

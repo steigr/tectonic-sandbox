@@ -5,32 +5,20 @@
 
 [[ -z "$TRACE" ]] || set -x
 
+. "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+
 set -e
 
 TECTONIC_VERSION="1.8.9-tectonic.1"
 TECTONIC_INSTALLER_ZIP="${1:-https://releases.tectonic.com/releases/tectonic_$TECTONIC_VERSION.zip}"
 TECTONIC_ADMIN_EMAIL="${TECTONIC_ADMIN_EMAIL:-$(whoami)@$(hostname -f)}"
 TECTONIC_ADMIN_PASSWORD="${TECTONIC_ADMIN_PASSWORD:-sandbox}"
-TECTONIC_MANIFEST_ARCHIVE="tectonic-$TECTONIC_VERSION-manifests.tar.gz"
-
+TECTONIC_MANIFEST_ARCHIVE="build/tectonic-$TECTONIC_VERSION-manifests.tar.gz"
+TECTONIC_LICENSE=build/license.txt
+TECTONIC_PULLSECRET=build/pull.json
 WORKDIR="$(mktemp -d -u)"
 
-panic() {
-    echo "${@}"
-    exit 1
-}
-
-_ensure_temp() {
-    if [[ -d "$1" ]]; then
-        return
-    else
-        mkdir -p "$1"
-        trap "rm -r $1" EXIT
-    fi
-}
-
 _prepare_installer() {
-    _ensure_temp "$1"
     [[ -f "$TECTONIC_INSTALLER_ZIP" ]] \
     && cp "$TECTONIC_INSTALLER_ZIP" "$1/installer.zip" \
     || curl -L -o "$1/installer.zip" "$TECTONIC_INSTALLER_ZIP"
@@ -43,11 +31,10 @@ _prepare_installer() {
 
 _provide_license() {
   _ensure_temp "$1"
-  cp license.txt pull.json "$1"
+  cp "$TECTONIC_LICENSE" "$TECTONIC_PULLSECRET" "$1"
 }
 
 _set_tfvars() {
-    _ensure_temp "$1"
     ( cd "$1"; \
       export INSTALLER_PATH="$PWD/tectonic-installer/darwin/installer" PATH="$PWD/tectonic-installer/darwin:$PATH"
       terraform init
@@ -80,7 +67,6 @@ EOF
 }
 
 _disable_matchbox() {
-    _ensure_temp "$1"
     ( cd "$1"
       echo > platforms/metal/provider.tf
       sed '/^variable "tectonic_metal_matchbox/,/^}$/d' platforms/metal/variables.tf > platforms/metal/variables.tf.tmp \
@@ -95,7 +81,6 @@ _disable_matchbox() {
 }
 
 _generate_manifests() {
-    _ensure_temp "$1"
     ( cd "$1"
       touch license.txt
       touch pull.json
@@ -112,10 +97,13 @@ _save_manifests() {
   tar -z -c -C "$1/generated" . > "$TECTONIC_MANIFEST_ARCHIVE"
 }
 
-[[ -f license.txt ]] || panic "Provide own license.txt or download tectonic-sandbox"
-[[ -f pull.json ]] || panic "Provide own pull.json or download tectonic-sandbox"
+_ensure_build
+
+[[ -f "$TECTONIC_LICENSE" ]] || panic "Provide own $TECTONIC_LICENSE or download tectonic-sandbox"
+[[ -f "$TECTONIC_PULLSECRET" ]] || panic "Provide own $TECTONIC_PULLSECRET or download tectonic-sandbox"
 
 [[ -f "$TECTONIC_MANIFEST_ARCHIVE" ]] || (
+  _ensure_temp "$WORKDIR"
   _prepare_installer "$WORKDIR"
   _provide_license "$WORKDIR"
   _set_tfvars "$WORKDIR"
