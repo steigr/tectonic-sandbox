@@ -37,4 +37,7 @@ _extract_license() {
     cp "$1/license.txt" "$1/pull.json" .
 }
 
-_extract_license "$WORKDIR"
+[[ -f "license.txt" ]] || NEED_DATA=1
+[[ -f "pull.json"   ]] || NEED_DATA=1
+
+[[ -z "$NEED_DATA" ]] || _extract_license "$WORKDIR"
