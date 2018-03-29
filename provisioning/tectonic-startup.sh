@@ -37,7 +37,7 @@ done
 kubectl get pods --all-namespaces > /tmp/cat.txt
 cat /tmp/cat.txt
 
-tectonic_username="$(kubectl -n tectonic-system get configmap/tectonic-identity -o json | jq -r '.data."config.yaml"' | grep username | awk '{print $2}')"
+tectonic_username="$(kubectl -n tectonic-system get configmap/tectonic-identity -o json | jq -r '.data."config.yaml"' | grep email | awk -F'"' '{print $2}')"
 
 cat << EOF
 Tectonic has started successfully! You can log into your cluster now:
