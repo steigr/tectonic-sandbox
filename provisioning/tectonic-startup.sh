@@ -6,10 +6,6 @@ KUBECTL_URL=https://storage.googleapis.com/kubernetes-release/release/$KUBECTL_V
 
 trap "{ rm -f /tmp/cat.txt; }" EXIT
 
-addr=172.17.4.201/24
-k8s_net_dev="$(ip route get 172.17.4.1  | xargs | awk -F"dev " '{print $2}' | awk '{print $1}')"
-ip addr | grep -q "$addr" || ip addr add dev $k8s_net_dev $addr
-
 systemctl start --no-block tectonic
 
 echo "Downloading kubectl"
