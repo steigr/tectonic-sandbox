@@ -37,7 +37,7 @@ _patch_tectonic_ingress() {
     ( cd "$1"
       
       # move k8s api to port 445
-      for manifest in $(find $(find $(find . -name '*manifest' -type d) -name '*apiserver.yaml' -type f); do 
+      for manifest in $(find $(find . -name '*manifests' -type d) -name '*apiserver.yaml' -type f); do 
           sed -e 's|secure-port=443|secure-port=445|g' "$manifest" > "$manifest".tmp \
           && mv "$manifest".tmp "$manifest"
       done
