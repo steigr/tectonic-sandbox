@@ -6,3 +6,4 @@
 /tectonic-*-manifests.tar.gz
 /*.box
 /*.json
+/vagrant-ignition.gem
