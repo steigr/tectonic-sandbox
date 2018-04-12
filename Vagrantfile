@@ -27,6 +27,7 @@ Vagrant.configure("2") do |config|
   config.vm.network "private_network", ip: node_ip
 
   config.vm.provider node_provider do |vmx|
+    vmx.whitelist_verified = :disable_warning
     vmx.gui = false
     vmx.memory = node_memory
     vmx.vmx.merge!({
